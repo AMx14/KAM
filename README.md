@@ -1,7 +1,4 @@
-const fs = require('fs');
 
-// Define the content of the README.md
-const content = `
 # Key Account Management System (KAM)
 
 The **Key Account Management (KAM)** system is a web-based platform designed to manage restaurants, contacts, and interactions. This system facilitates tracking key accounts, their stakeholders, and activities like calls or orders for streamlined business operations.
