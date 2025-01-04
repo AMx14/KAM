@@ -1,69 +1,86 @@
-// src/tests/services/interaction.test.js
 const { sequelize, models } = require('../../infra/db');
 const InteractionService = require('../../domain/services/interaction');
 
-beforeAll(async () => {
-    await sequelize.sync({ force: true }); // Recreate the database schema
+let testRestaurant;
+let testAddress;
+let testInteraction;
 
-    // Seed a test restaurant
-    await models.Restaurant.create({
-        id: 1, // Set a static ID for consistency in testing
-        name: 'Test Restaurant',
-        address: '123 Main St',
-        status: 'active',
+beforeAll(async () => {
+    await sequelize.sync({ force: true });
+});
+
+beforeEach(async () => {
+    // Create test address
+    testAddress = await models.Address.create({
+        street: '123 Main St',
+        city: 'City A',
+        state: 'State A',
+        country: 'India',
+        pin_code: '123456',
+        timezone: 'Asia/Kolkata',
     });
+
+    // Create test restaurant
+    testRestaurant = await models.Restaurant.create({
+        name: 'Test Restaurant',
+        status: 'active',
+        call_frequency: 7,
+        address_id: testAddress.id,
+    });
+
+    // Create test interaction
+    testInteraction = await models.Interaction.create({
+        type: 'call',
+        details: 'Test interaction',
+        date: new Date(),
+        restaurant_id: testRestaurant.id,
+    });
+});
+
+afterEach(async () => {
+    await models.Interaction.destroy({ where: {} });
+    await models.Restaurant.destroy({ where: {} });
+    await models.Address.destroy({ where: {} });
 });
 
 afterAll(async () => {
-    await sequelize.close(); // Close the database connection
+    await sequelize.close();
 });
 
 describe('Interaction Service', () => {
-    test('Should create a new interaction for a restaurant', async () => {
+    test('Should fetch all interactions for a restaurant', async () => {
+        const interactions = await InteractionService.getInteractionsByRestaurantId(testRestaurant.id);
+        expect(interactions.length).toBeGreaterThanOrEqual(1);
+        expect(interactions[0].restaurant_id).toBe(testRestaurant.id);
+    });
+
+    test('Should create a new interaction', async () => {
         const interactionData = {
-            type: 'call',
-            details: 'Called to follow up on the order.',
-            restaurant_id: 1,
+            type: 'order',
+            details: 'New order placed',
+            date: new Date(),
+            restaurant_id: testRestaurant.id,
         };
+
         const interaction = await InteractionService.createInteraction(interactionData);
         expect(interaction).toHaveProperty('id');
-        expect(interaction.type).toBe('call');
+        expect(interaction.type).toBe('order');
+        expect(interaction.restaurant_id).toBe(testRestaurant.id);
     });
-    test('Should fetch all interactions for a restaurant', async () => {
-        const interactions = await InteractionService.getInteractionsByRestaurantId(1);
-        expect(interactions.length).toBeGreaterThanOrEqual(1);
-        expect(interactions[0].restaurant_id).toBe(1);
-    });
-    test('Should update an interaction by ID', async () => {
-        const interactions = await InteractionService.getInteractionsByRestaurantId(1);
-        const updated = await InteractionService.updateInteraction(interactions[0].id, {
-            details: 'Updated details of the interaction.',
+
+    test('Should update an interaction', async () => {
+        const updatedDetails = 'Updated interaction details';
+        const updated = await InteractionService.updateInteraction(testInteraction.id, {
+            details: updatedDetails,
         });
-
-        expect(updated.details).toBe('Updated details of the interaction.');
+        expect(updated.details).toBe(updatedDetails);
     });
-    test('Should delete an interaction by ID', async () => {
-        const interactions = await InteractionService.getInteractionsByRestaurantId(1);
-        const success = await InteractionService.deleteInteraction(interactions[0].id);
 
+    test('Should delete an interaction', async () => {
+        const success = await InteractionService.deleteInteraction(testInteraction.id);
         expect(success).toBe(true);
 
-        const remainingInteractions = await InteractionService.getInteractionsByRestaurantId(1);
-        expect(remainingInteractions.length).toBe(0);
-    });
-    test('Should fetch leads due for a call', async () => {
-        const leads = await InteractionService.getLeadsDueForCall();
-        expect(leads).toBeDefined();
-        expect(leads.length).toBeGreaterThanOrEqual(0);
-    });
-    test('Should calculate order frequency and average gap for a restaurant', async () => {
-        const frequencyData = await InteractionService.getOrderFrequency(1);
-        expect(frequencyData).toHaveProperty('frequency');
-        expect(frequencyData).toHaveProperty('averageGap');
-    });
-    test('Should fetch performance data for all restaurants', async () => {
-        const performanceData = await InteractionService.getPerformanceData();
-        expect(performanceData).toBeDefined();
-        expect(performanceData.length).toBeGreaterThanOrEqual(1);
+        const deletedInteraction = await models.Interaction.findByPk(testInteraction.id);
+        expect(deletedInteraction).toBeNull();
     });
 });

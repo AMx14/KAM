@@ -51,11 +51,22 @@ const RestaurantService = {
                 ],
             });
 
-            const performanceMetrics = restaurants.map((restaurant) => {
+            return restaurants.map((restaurant) => {
                 const interactions = restaurant.interactions || [];
                 const orderInteractions = interactions.filter((i) => i.type === 'order');
 
                 const totalOrders = orderInteractions.length;
+
+                if (totalOrders === 0) {
+                    return {
+                        id: restaurant.id,
+                        name: restaurant.name,
+                        totalOrders,
+                        averageOrderFrequency: null,
+                        performanceStatus: 'underperforming',
+                        message: 'No orders have been placed for this restaurant.',
+                    };
+                }
 
                 const averageOrderFrequency =
                     totalOrders > 1
@@ -77,7 +88,7 @@ const RestaurantService = {
                         ? 'well-performing'
                         : totalOrders > 0
                             ? 'average'
-                            : 'underperforming';
+                            : 'under-performing';
 
                 return {
                     id: restaurant.id,
@@ -87,8 +98,6 @@ const RestaurantService = {
                     performanceStatus,
                 };
             });
-
-            return performanceMetrics;
         } catch (error) {
             console.error('Error fetching performance metrics:', error.message || error);
             throw new Error('Unable to fetch performance metrics');

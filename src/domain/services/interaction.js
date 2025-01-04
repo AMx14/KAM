@@ -1,4 +1,5 @@
 const { models, Sequelize } = require('../../infra/db');
+const moment = require('moment-timezone');
 
 const InteractionService = {
     async createInteraction(interactionData) {
@@ -7,7 +8,8 @@ const InteractionService = {
         if (interaction.type === 'call') {
             const restaurant = await models.Restaurant.findByPk(interaction.restaurant_id);
             if (restaurant) {
-                restaurant.last_call_date = interaction.date || new Date();
+                // Store last call date in UTC
+                restaurant.last_call_date = moment(interaction.date || new Date()).utc().toDate();
                 await restaurant.save();
             }
         }
@@ -24,25 +26,33 @@ const InteractionService = {
 
     async updateInteraction(interactionId, updates) {
         const interaction = await models.Interaction.findByPk(interactionId);
-        if (!interaction) throw new Error('Interaction not found');
+        if (!interaction) throw new Error('Interaction not found with the provided ID.');
         return await interaction.update(updates);
     },
 
     async deleteInteraction(interactionId) {
         const interaction = await models.Interaction.findByPk(interactionId);
-        if (!interaction) throw new Error('Interaction not found');
+        if (!interaction) throw new Error('Interaction not found with the provided ID.');
         await interaction.destroy();
         return true;
     },
 
-    async getLeadsDueForCall() {
+    async getLeadsDueForCall(timezone = 'UTC') {
+        // Validate timezone
+        if (!moment.tz.zone(timezone)) {
+            throw new Error(`Invalid timezone: ${timezone}. Please provide a valid IANA timezone identifier.`);
+        }
+
+        const nowInTimezone = moment.tz(timezone).startOf('day').utc().toDate();
+
         return await models.Restaurant.findAll({
             where: Sequelize.literal(`
                 "last_call_date" IS NULL
-                OR "last_call_date" + "call_frequency" * interval '1 day' <= CURRENT_DATE
+                OR "last_call_date" + "call_frequency" * interval '1 day' <= '${nowInTimezone.toISOString()}'
             `),
         });
     },
+
     async getOrderFrequency(restaurantId) {
         const orders = await models.Interaction.findAll({
             where: {
@@ -96,21 +106,6 @@ const InteractionService = {
 
         return performanceData;
     },
-
 };
 
 module.exports = InteractionService;
-
-
-
-
-// Remaining Tasks Beyond Call Planning
-// The remaining tasks you’ve mentioned are separate from call planning:
-//
-//     Performance Tracking:
-//
-//     Analyze ordering patterns and implement logic to determine well-performing and underperforming accounts based on Interaction data.
-//     Authentication and Authorization:
-//
-//     Add JWT-based authentication.
-//     Implement role-based access control for Admins and Regular Users.

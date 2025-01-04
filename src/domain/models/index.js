@@ -1,4 +1,3 @@
-// src/domain/models/index.js
 const { Sequelize } = require('sequelize');
 const RestaurantModel = require('../../infra/db/models/restaurant');
 const ContactModel = require('../../infra/db/models/contact');
