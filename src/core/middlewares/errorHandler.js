@@ -1,21 +1,52 @@
-module.exports = (err, req, res, next) => {
-    console.error('Error:', err.message || err);
+const logger = require('../logger');
 
-    // Handle Sequelize Validation Errors
+const errorHandler = (err, req, res, next) => {
+    logger.error('Error:', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack
+    });
+
+    // Validation errors
+    if (err.name === 'ValidationError') {
+        return res.status(400).json({
+            error: err.message,
+            type: 'ValidationError'
+        });
+    }
+
+    // Sequelize errors
     if (err.name === 'SequelizeValidationError') {
-        return res.status(400).json({ error: err.errors.map((e) => e.message).join(', ') });
+        return res.status(400).json({
+            error: err.errors[0].message,
+            type: 'ValidationError'
+        });
     }
 
-    // Handle Foreign Key Constraint Errors
-    if (err.name === 'SequelizeForeignKeyConstraintError') {
-        return res.status(400).json({ error: 'Invalid foreign key provided.' });
+    // Resource not found
+    if (err.name === 'ResourceNotFoundError') {
+        return res.status(404).json({
+            error: err.message,
+            type: 'NotFoundError'
+        });
     }
 
-    // Handle Resource Not Found
-    if (err.status === 404) {
-        return res.status(404).json({ error: err.message || 'Resource not found.' });
+    // Authorization errors
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+        return res.status(401).json({
+            error: 'Invalid or expired token',
+            type: 'AuthenticationError'
+        });
     }
 
-    // Default to 500 Internal Server Error
-    res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
+    // Default error
+    res.status(500).json({
+        error: process.env.NODE_ENV === 'production' 
+            ? 'An unexpected error occurred' 
+            : err.message,
+        type: 'ServerError',
+        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    });
 };
+
+module.exports = errorHandler;

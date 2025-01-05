@@ -16,11 +16,22 @@ module.exports = (sequelize) => {
             },
             status: {
                 type: DataTypes.ENUM('active', 'inactive', 'converted'),
-                defaultValue: 'active', // Default to 'active' when not specified
+                allowNull: false,
+                defaultValue: 'active',
+                validate: {
+                    isIn: {
+                        args: [['active', 'inactive', 'converted']],
+                        msg: "Status must be one of: 'active', 'inactive', or 'converted'"
+                    }
+                }
             },
             call_frequency: {
                 type: DataTypes.INTEGER,
-                defaultValue: 7, // Default to 7 days for call reminders
+                allowNull: false,
+                validate: {
+                    min: 1,
+                    isInt: true
+                }
             },
             last_call_date: {
                 type: DataTypes.DATE,

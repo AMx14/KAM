@@ -30,7 +30,11 @@
     "sequelize": "^6.37.5",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.17.0",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "axios": "^1.6.2",
+    "express-rate-limit": "^7.1.5",
+    "rate-limit-redis": "^4.2.0",
+    "xss": "^1.0.14"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

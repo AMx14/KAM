@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const RestaurantService = require('../../domain/services/restaurant');
+const authMiddleware = require('../../core/middlewares/authMiddleware');
+const roleMiddleware = require('../../core/middlewares/roleMiddleware');
 
 // Create a new restaurant
 router.post('/', async (req, res, next) => {
@@ -15,10 +17,28 @@ router.post('/', async (req, res, next) => {
 // Get all restaurants
 router.get('/', async (req, res, next) => {
     try {
-        const restaurants = await RestaurantService.getAllRestaurants();
-        res.status(200).json(restaurants);
-    } catch (err) {
-        next(err);
+        const filters = {
+            status: req.query.status,
+            search: req.query.search,
+            page: req.query.page,
+            limit: req.query.limit
+        };
+
+        const result = await RestaurantService.getRestaurants(filters);
+        
+        res.json({
+            status: 'success',
+            data: {
+                restaurants: result.restaurants,
+                pagination: {
+                    total: result.total,
+                    page: result.page,
+                    totalPages: result.totalPages
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -62,7 +82,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // Update a restaurant by ID
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', authMiddleware, async (req, res, next) => {
     try {
         const updatedRestaurant = await RestaurantService.updateRestaurant(req.params.id, req.body);
         if (!updatedRestaurant) {

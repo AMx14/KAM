@@ -1,4 +1,7 @@
 const { models, Sequelize } = require('../../infra/db');
+const { ValidationError, ResourceNotFoundError } = require('../../core/errors/customErrors');
+
+const VALID_STATUSES = ['active', 'inactive', 'converted'];
 
 const RestaurantService = {
     async createRestaurant(restaurantData) {
@@ -13,10 +16,34 @@ const RestaurantService = {
         return await models.Restaurant.findByPk(id);
     },
 
-    async updateRestaurant(id, updateData) {
+    async updateRestaurant(id, data) {
+        // Validate status
+        if (data.status && !['active', 'inactive', 'converted'].includes(data.status)) {
+            throw new ValidationError("Status must be one of: 'active', 'inactive', or 'converted'");
+        }
+
+        // Validate call_frequency
+        if (data.call_frequency !== undefined) {
+            const frequency = parseInt(data.call_frequency);
+            if (isNaN(frequency) || frequency < 1) {
+                throw new ValidationError('Call frequency must be a positive integer');
+            }
+            data.call_frequency = frequency;
+        }
+
         const restaurant = await models.Restaurant.findByPk(id);
-        if (!restaurant) return null;
-        return await restaurant.update(updateData);
+        if (!restaurant) {
+            throw new ResourceNotFoundError('Restaurant');
+        }
+
+        try {
+            return await restaurant.update(data);
+        } catch (error) {
+            if (error.name === 'SequelizeValidationError') {
+                throw new ValidationError(error.errors[0].message);
+            }
+            throw error;
+        }
     },
 
     async deleteRestaurant(id) {
@@ -102,6 +129,38 @@ const RestaurantService = {
             console.error('Error fetching performance metrics:', error.message || error);
             throw new Error('Unable to fetch performance metrics');
         }
+    },
+
+    async getRestaurants(filters = {}) {
+        const where = {};
+        
+        // Add status filter
+        if (filters.status) {
+            where.status = filters.status;
+        }
+
+        // Add search filter for name
+        if (filters.search) {
+            where.name = {
+                [Sequelize.Op.iLike]: `%${filters.search}%`
+            };
+        }
+
+        const options = {
+            where,
+            order: [['createdAt', 'DESC']],
+            limit: filters.limit ? parseInt(filters.limit) : 10,
+            offset: filters.page ? (parseInt(filters.page) - 1) * (filters.limit || 10) : 0
+        };
+
+        const restaurants = await models.Restaurant.findAndCountAll(options);
+        
+        return {
+            restaurants: restaurants.rows,
+            total: restaurants.count,
+            page: filters.page ? parseInt(filters.page) : 1,
+            totalPages: Math.ceil(restaurants.count / (filters.limit || 10))
+        };
     },
 };
 
