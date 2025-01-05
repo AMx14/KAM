@@ -1,217 +1,213 @@
+# KAM Lead Management System
 
-# Key Account Management System (KAM)
+## Project Overview
+The Key Account Manager (KAM) Lead Management System is designed to streamline the management of restaurant accounts for Udaan, a B2B e-commerce platform. This system allows Key Account Managers to manage leads, track interactions, and monitor account performance efficiently.
 
-The **Key Account Management (KAM)** system is a web-based platform designed to manage restaurants, contacts, and interactions. This system facilitates tracking key accounts, their stakeholders, and activities like calls or orders for streamlined business operations.
-
-## Table of Contents
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Technologies Used](#technologies-used)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Database Schema](#database-schema)
-- [API Endpoints](#api-endpoints)
-- [Testing](#testing)
-- [Future Enhancements](#future-enhancements)
-
----
-
-## Features
-1. **Restaurant Management**  
-   - Create, read, update, and delete restaurant details.
-   - Manage restaurant statuses: \`active\`, \`inactive\`, \`converted\`.
-
-2. **Contact Management**  
-   - Add and retrieve stakeholders (contacts) linked to restaurants.
-   - Update and delete contact details.
-
-3. **Interaction Management**  
-   - Log and track interactions (e.g., \`calls\`, \`orders\`) with restaurants.
-   - Retrieve interaction details by restaurant.
-
-4. **Comprehensive API**  
-   - RESTful APIs for restaurants, contacts, and interactions.
-
-5. **Database Relationships**  
-   - Sequelize ORM for defining models and managing relationships.
-
-6. **Testing**  
-   - Thorough unit tests for services.
-
----
-
-## Project Structure
-\`\`\`
-KAM/
-├── src/
-│   ├── api/                   # API Layer
-│   │   ├── routes/            # API route definitions
-│   │   │   ├── restaurant.js
-│   │   │   ├── contact.js
-│   │   │   └── interaction.js
-│   │   ├── controllers/       # API controllers for handling requests
-│   │       ├── restaurant.js
-│   │       ├── contact.js
-│   │       └── interaction.js
-│   ├── domain/                # Business logic and services
-│   │   ├── services/          # Logic layer
-│   │       ├── restaurant.js
-│   │       ├── contact.js
-│   │       └── interaction.js
-│   ├── infra/                 # Infrastructure layer
-│   │   ├── db/                # Database models and connection setup
-│   │   │   ├── models/
-│   │   │   │   ├── restaurant.js
-│   │   │   │   ├── contact.js
-│   │   │   │   └── interaction.js
-│   │   │   ├── index.js       # Export Sequelize and models
-│   ├── tests/                 # Unit tests
-│       ├── services/
-│           ├── restaurant.test.js
-│           ├── contact.test.js
-│           └── interaction.test.js
-├── .env                       # Environment variables
-├── package.json               # Node.js dependencies and scripts
-├── README.md                  # Project documentation
-└── server.js                  # Entry point
-\`\`\`
-
----
-
-## Technologies Used
-- **Backend:** Node.js, Express.js
-- **Database:** PostgreSQL, Sequelize ORM
-- **Caching:** Redis
-- **Testing:** Jest
-- **Development Tools:** ESLint, Prettier, Nodemon, Sequelize CLI
-
----
-
-## Getting Started
+## System Requirements
 ### Prerequisites
-Ensure you have the following installed:
-1. **Node.js** (v16 or later)
-2. **PostgreSQL** (v13 or later)
-3. **Redis**
-4. **npm**
+- Node.js (v16.x or above)
+- Docker (optional, for containerized deployment)
+- npm or yarn for package management
 
-### Installation
+### Installation Instructions
 1. Clone the repository:
-   \`\`\`bash
-   git clone https://github.com/your-username/KAM.git
+   ```bash
+   git clone <repository-url>
    cd KAM
-   \`\`\`
+   ```
+
 2. Install dependencies:
-   \`\`\`bash
+   ```bash
    npm install
-   \`\`\`
-3. Set up the database:
-   \`\`\`bash
-   npm run db:sync
-   \`\`\`
+   ```
 
-4. Start the development server:
-   \`\`\`bash
-   npm run dev
-   \`\`\`
+3. Set up environment variables:
+   - Copy `.env.example` to `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Update `.env` with the required values.
 
----
+4. Run database migrations:
+   ```bash
+   npm run migrate
+   ```
 
-## Environment Variables
-Create a \`.env\` file in the root directory with the following content:
-\`\`\`
-PORT=3000
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=kam_user
-DB_PASSWORD=123
-DB_NAME=kam_management
-REDIS_HOST=localhost
-REDIS_PORT=6379
-JWT_SECRET=super_secure_key
-\`\`\`
+5. (Optional) Seed the database:
+   ```bash
+   npm run seed
+   ```
 
----
+## Running the Application
+### Development
+To start the application in development mode:
+```bash
+npm run dev
+```
 
-## Database Schema
-### Tables:
-1. **Restaurants**
-   - \`id\` (Primary Key)
-   - \`name\` (String)
-   - \`address\` (String)
-   - \`status\` (Enum: \`active\`, \`inactive\`, \`converted\`)
+### Production
+To build and start the application in production mode:
+```bash
+npm run build
+npm start
+```
 
-2. **Contacts**
-   - \`id\` (Primary Key)
-   - \`name\` (String)
-   - \`role\` (String)
-   - \`phone\` (String)
-   - \`email\` (String)
-   - \`restaurant_id\` (Foreign Key)
-
-3. **Interactions**
-   - \`id\` (Primary Key)
-   - \`type\` (Enum: \`call\`, \`order\`)
-   - \`details\` (Text)
-   - \`date\` (Timestamp)
-   - \`restaurant_id\` (Foreign Key)
-
----
-
-## API Endpoints
-### Restaurant
-| Method | Endpoint               | Description                     |
-|--------|-------------------------|---------------------------------|
-| POST   | \`/api/restaurants\`      | Create a new restaurant         |
-| GET    | \`/api/restaurants\`      | Fetch all restaurants           |
-| GET    | \`/api/restaurants/:id\`  | Fetch restaurant by ID          |
-| PUT    | \`/api/restaurants/:id\`  | Update restaurant by ID         |
-| DELETE | \`/api/restaurants/:id\`  | Delete restaurant by ID         |
-
-### Contact
-| Method | Endpoint                  | Description                     |
-|--------|---------------------------|---------------------------------|
-| POST   | \`/api/contacts\`           | Create a new contact            |
-| GET    | \`/api/contacts/:restaurant_id\` | Fetch all contacts by restaurant |
-| PUT    | \`/api/contacts/:id\`       | Update contact by ID            |
-| DELETE | \`/api/contacts/:id\`       | Delete contact by ID            |
-
-### Interaction
-| Method | Endpoint                  | Description                     |
-|--------|---------------------------|---------------------------------|
-| POST   | \`/api/interactions\`       | Create a new interaction        |
-| GET    | \`/api/interactions/:restaurant_id\` | Fetch all interactions by restaurant |
-
----
+### Docker
+To run the application using Docker:
+1. Build the Docker image:
+   ```bash
+   docker-compose build
+   ```
+2. Start the services:
+   ```bash
+   docker-compose up
+   ```
 
 ## Testing
-1. Run all tests:
-   \`\`\`bash
-   npm test
-   \`\`\`
-2. Check test coverage for:
-   - **Restaurant**
-   - **Contact**
-   - **Interaction**
+Run unit and integration tests:
+```bash
+npm test
+```
 
----
+Run specific test files:
+```bash
+npm test -- tests/services/auth.test.js
+```
 
-## Future Enhancements
-1. Implement role-based authentication.
-2. Add pagination for large datasets.
-3. Create dashboards for visualizing interactions.
-4. Deploy on a cloud platform (e.g., AWS, Heroku).
-5. Add email notifications for scheduled interactions.
+## Project Structure
+```
+.
+├── .DS_Store
+├── .dockerignore
+├── .env
+├── .env.example
+├── .env.test
+├── .eslintrc.js
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── KAM.iml
+│   ├── material_theme_project_new.xml
+│   ├── modules.xml
+│   ├── vcs.xml
+│   └── workspace.xml
+├── .sequelizerc
+├── Dockerfile
+├── KAM Document.docx
+├── README.md
+├── curl
+├── docker-compose.yml
+├── eslint.config.mjs
+├── generate-hash.js
+├── healthcheck.js
+├── jest.config.js
+├── jest.setup.js
+├── logs
+│   └── server.log
+├── openapi.yaml
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── start-dev.sh
+├── server.js
+└── src
+    ├── .DS_Store
+    ├── api
+    │   ├── controllers
+    │   ├── index.js
+    │   └── routes
+    │       ├── address.js
+    │       ├── auth.js
+    │       ├── contact.js
+    │       ├── health.js
+    │       ├── interaction.js
+    │       └── restaurant.js
+    ├── core
+    │   ├── config.js
+    │   ├── errors
+    │   │   └── customErrors.js
+    │   ├── logger.js
+    │   ├── middlewares
+    │   │   ├── authMiddleware.js
+    │   │   ├── errorHandler.js
+    │   │   ├── errorMiddleware.js
+    │   │   ├── rateLimiter.js
+    │   │   ├── roleMiddleware.js
+    │   │   └── sanitizer.js
+    │   └── middlewares.js
+    ├── domain
+    │   ├── models
+    │   │   └── index.js
+    │   ├── repositories
+    │   └── services
+    │       ├── address.js
+    │       ├── auth.js
+    │       ├── contact.js
+    │       ├── interaction.js
+    │       └── restaurant.js
+    ├── infra
+    │   ├── cache
+    │   └── db
+    │       ├── config
+    │       │   └── config.js
+    │       ├── index.js
+    │       ├── migrations
+    │       │   └── 20250103144929-create-addresses.js
+    │       ├── models
+    │       │   ├── address.js
+    │       │   ├── contact.js
+    │       │   ├── index.js
+    │       │   ├── interaction.js
+    │       │   ├── restaurant.js
+    │       │   └── user.js
+    │       └── seeders
+    ├── test-db.js
+    ├── tests
+    │   ├── integration
+    │   ├── services
+    │   │   ├── auth.test.js
+    │   │   ├── contact.test.js
+    │   │   ├── interaction.test.js
+    │   │   └── restaurant.test.js
+    │   └── unit
+    └── utils
+        ├── googleMaps.js
+        └── timezone.js
+```
 
----
+## API Documentation
+API endpoints are defined in `openapi.yaml`. Use tools like Swagger UI or Postman to explore and test the API.
 
-## Author
-Developed by **Akshat Maithani**.
+## Sample Usage Examples
+1. **Add a Restaurant Lead:**
+   ```bash
+   curl -X POST -H "Content-Type: application/json" -d '{"name": "Restaurant Name", "location": "City"}' http://localhost:3000/api/restaurant
+   ```
+2. **Get Leads Requiring Calls:**
+   ```bash
+   curl -X GET http://localhost:3000/api/calls/today
+   ```
 
-Feel free to reach out for any queries or suggestions!
-`;
+## Deployment
+### CI/CD Pipeline
+The repository includes a CI/CD pipeline defined in `.github/workflows/ci.yml`. It automates testing and deployment steps.
 
-// Write the content to README.md
-fs.writeFileSync('README.md', content, 'utf8');
+### Environment Configuration
+Refer to `.env.example` for required environment variables. Ensure secure handling of secrets in production.
 
-console.log('README.md has been generated successfully!');
+### Online Accessibility
+Deploy using services like AWS, Heroku, or any cloud hosting platform. Include the `Dockerfile` and `docker-compose.yml` for containerized deployment.
+
+## Demonstration
+Record a 5-10 minute video showing:
+1. Setting up the environment.
+2. Running the application.
+3. Demonstrating major features such as lead management, interaction tracking, and performance monitoring.
+
+Provide the video link in this section.
+
+## License
+This project is licensed under the [MIT License](LICENSE).
