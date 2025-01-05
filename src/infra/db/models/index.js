@@ -1,8 +1,8 @@
+const { Sequelize } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
-const { Sequelize, DataTypes } = require('sequelize');
-require('dotenv').config();
 
+// Initialize Sequelize with Railway's DATABASE_URL
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     dialectOptions: {
@@ -13,23 +13,26 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
     }
 });
 
+// Initialize models object
 const models = {};
 
-// Dynamically import all model files
-const basename = path.basename(__filename);
+// Read model files
 fs.readdirSync(__dirname)
-    .filter((file) => file.indexOf('.') !== 0 && file !== basename && file.slice(-3) === '.js')
-    .forEach((file) => {
-        const model = require(path.join(__dirname, file))(sequelize, DataTypes);
+    .filter(file => {
+        return file.indexOf('.') !== 0 && 
+               file !== 'index.js' && 
+               file.slice(-3) === '.js';
+    })
+    .forEach(file => {
+        const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
         models[model.name] = model;
     });
 
-// Define associations if available in models
-Object.keys(models).forEach((modelName) => {
+// Set up associations
+Object.keys(models).forEach(modelName => {
     if (models[modelName].associate) {
         models[modelName].associate(models);
     }
 });
 
-// Export Sequelize instance and models
 module.exports = { sequelize, models };
