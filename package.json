@@ -6,11 +6,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "lint": "eslint src",
-    "test": "jest",
+    "lint": "eslint .",
+    "test": "jest --coverage",
     "migrate": "sequelize-cli db:migrate",
     "seed": "sequelize-cli db:seed:all",
-    "db:sync": "node -e 'require(\"./src/infra/db\").sequelize.sync({ force: true }).then(() => process.exit(0)).catch(err => console.error(err));'"
+    "db:sync": "node -e 'require(\"./src/infra/db\").sequelize.sync({ force: true }).then(() => process.exit(0)).catch(err => console.error(err));'",
+    "build": "echo 'No build step required'"
   },
   "keywords": [],
   "author": "",

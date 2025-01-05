@@ -2,14 +2,19 @@ const { Sequelize } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
 
-// Initialize Sequelize with Railway's DATABASE_URL
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+// Initialize Sequelize with DATABASE_URL or local config
+const sequelize = new Sequelize(process.env.DATABASE_URL || {
     dialect: 'postgres',
+    host: process.env.DB_HOST || 'postgres',
+    port: process.env.DB_PORT || 5432,
+    username: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    database: process.env.DB_NAME || 'kam_db',
     dialectOptions: {
-        ssl: {
+        ssl: process.env.DATABASE_URL ? {
             require: true,
             rejectUnauthorized: false
-        }
+        } : false
     }
 });
 
