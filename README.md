@@ -254,11 +254,6 @@ http://localhost:3000/api-docs
 ## Deployment
 Refer to the Docker section above for running the application in a containerized environment.
 
-## Demonstration
-Record a video showing:
-1. Setting up the environment.
-2. Running the application using Docker.
-3. Demonstrating API requests using Postman or curl commands.
 
 Provide the video link in this section.
 
